@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Device Instance Utility</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family:
+          'Segoe UI',
+          -apple-system,
+          BlinkMacSystemFont,
+          Roboto,
+          Arial,
+          sans-serif;
+        font-size: 13px;
+        background: #f4f4f4;
+        color: #333;
+        padding: 12px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr minmax(280px, 30%);
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .col-left {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .col-right {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .card {
+        border: 1px solid #c8cdd2;
+        border-radius: 4px;
+        background: #fff;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .col-right .card {
+        flex: 1 1 auto;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+      }
+
+      /* ── HEADER (toolbar + description share this gray chrome) ── */
+      .header {
+        background: #d3d3d385;
+        padding-bottom: 0;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        min-height: 36px;
+      }
+
+      .step,
+      .title {
+        color: #054163;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .step:hover,
+      .title:hover {
+        text-decoration: underline;
+      }
+
+      .chev {
+        display: none;
+      }
+
+      .info {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #e8eef7;
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        cursor: pointer;
+        position: relative;
+        flex-shrink: 0;
+        user-select: none;
+        line-height: 1;
+      }
+
+      .badge {
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 11px;
+        background: oklch(0.97 0 0);
+        color: #555;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .search {
+        height: 26px;
+        border: 1px solid #c8cdd2;
+        border-radius: 3px;
+        padding: 0 8px;
+        font-size: 12px;
+        font-family: inherit;
+        color: #333;
+        background: #fff;
+        outline: none;
+        flex: 0 1 240px;
+        min-width: 120px;
+      }
+
+      .search::placeholder {
+        color: #aaa;
+      }
+
+      .search:focus {
+        border-color: #3b82f6;
+      }
+
+      .sp {
+        flex: 1 1 0;
+        min-width: 4px;
+      }
+
+      .toolbar button {
+        height: 26px;
+        padding: 0 10px;
+        border: 1px solid #c8cdd2;
+        border-radius: 3px;
+        background: #fff;
+        font-size: 12px;
+        font-family: inherit;
+        color: #054163;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .toolbar button:hover {
+        background: #f5f7fa;
+      }
+
+      /* ── DESCRIPTION — inset light-blue bar inside header (hidden by default) ── */
+      .desc {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        margin: 0 8px 8px;
+        padding: 8px 12px;
+        border-radius: 4px;
+        background: #f8fbff;
+        font-size: 12.5px;
+        color: #444;
+        line-height: 1.5;
+      }
+
+      .desc.open {
+        display: flex;
+      }
+
+      .desc .icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #bfdbfe;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 13px;
+      }
+
+      .desc b {
+        font-weight: 600;
+        color: #222;
+      }
+
+      /* ── BODY (visible by default) ── */
+      .body {
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #b8b8b8;
+        font-size: 13px;
+      }
+
+      .body.hide {
+        display: none !important;
+        flex: 0 !important;
+        min-height: 0 !important;
+        height: 0 !important;
+      }
+
+      #b1 {
+        height: 110px;
+      }
+      #b2 {
+        height: 120px;
+      }
+      #b3 {
+        height: 120px;
+      }
+      #b4 {
+        flex: 1 1 auto;
+        min-height: 200px;
+      }
+
+      /* When Live Preview body is collapsed, don't keep the card stretched */
+      .col-right .card.body-collapsed {
+        height: auto;
+        min-height: 0;
+        flex: 0 0 auto;
+        align-self: flex-start;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="col-left">
+        <!-- 1 — Project Materials -->
+        <div class="card">
+          <div class="header">
+            <div class="toolbar">
+              <div class="step" onclick="tb('b1')">1 -</div>
+              <div class="title" onclick="tb('b1')">Project Materials</div>
+              <div
+                class="info"
+                onclick="td(this)"
+                data-tip="Import devices from Oracle PPM or manually add Non-PPM devices. Assign the appropriate iTrac subclass before creating group templates."
+              >
+                ⓘ
+              </div>
+              <div class="badge">4 of 4</div>
+              <input class="search" placeholder="Search description, make or model" />
+              <div class="sp"></div>
+              <button type="button">+ Add Non-PPM Device</button>
+            </div>
+            <div class="desc">
+              <div class="icon">📦</div>
+              <div>
+                Import devices from Oracle PPM or add them manually, then assign the appropriate
+                <b>iTrac subclass</b> before creating group templates.
+              </div>
+            </div>
+          </div>
+          <div class="body" id="b1">Project Materials Table</div>
+        </div>
+
+        <!-- 2 — Group Templates -->
+        <div class="card">
+          <div class="header">
+            <div class="toolbar">
+              <div class="step" onclick="tb('b2')">2 -</div>
+              <div class="title" onclick="tb('b2')">Group Templates</div>
+              <div
+                class="info"
+                onclick="td(this)"
+                data-tip="Create reusable group templates to quickly and consistently generate all required device instances."
+              >
+                ⓘ
+              </div>
+              <div class="badge">5</div>
+              <input class="search" placeholder="Search templates" />
+              <div class="sp"></div>
+              <button type="button">+ New Group</button>
+            </div>
+            <div class="desc">
+              <div class="icon">📋</div>
+              <div
+                >Create reusable group templates to quickly and consistently generate all required device
+                instances.</div
+              >
+            </div>
+          </div>
+          <div class="body" id="b2">Group Templates Table</div>
+        </div>
+
+        <!-- 3 — Group Instances -->
+        <div class="card">
+          <div class="header">
+            <div class="toolbar">
+              <div class="step" onclick="tb('b3')">3 -</div>
+              <div class="title" onclick="tb('b3')">Group Instances</div>
+              <div
+                class="info"
+                onclick="td(this)"
+                data-tip="Customise group instances or related devices by updating the Group ID or Group Name and see the impact on generated device instances in the live preview."
+              >
+                ⓘ
+              </div>
+              <div class="badge">1</div>
+              <input class="search" placeholder="Search groups" />
+              <div class="sp"></div>
+              <button type="button">Renumber</button>
+            </div>
+            <div class="desc">
+              <div class="icon">⚙️</div>
+              <div>
+                Customise group instances or related devices by updating the <b>Group ID</b> or <b>Group Name</b> and
+                see the impact on generated device instances in the live preview.
+              </div>
+            </div>
+          </div>
+          <div class="body" id="b3">Group Instances Table</div>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <!-- 4 — Live Preview -->
+        <div class="card">
+          <div class="header">
+            <div class="toolbar">
+              <div class="step" onclick="tb('b4')">4 -</div>
+              <div class="title" onclick="tb('b4')">Live Preview</div>
+              <div
+                class="info"
+                onclick="td(this)"
+                data-tip="Preview of the device names that will be assigned to each device instance created in iTrac."
+              >
+                ⓘ
+              </div>
+              <input class="search" placeholder="Search preview" />
+              <div class="sp"></div>
+            </div>
+            <div class="desc">
+              <div class="icon">👁️</div>
+              <div>
+                Preview of the device names that will be assigned to each device instance created in
+                <b>iTrac</b>.
+              </div>
+            </div>
+          </div>
+          <div class="body" id="b4"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Toggle card body by id (e.g. tb('b1'))
+      function tb(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const hidden = el.classList.toggle('hide');
+        // Live Preview card is height-stretched; release that when body is collapsed
+        const card = el.closest('.card');
+        if (card) {
+          card.classList.toggle('body-collapsed', hidden);
+        }
+      }
+
+      // Toggle description inside the same .header as the info icon
+      function td(el) {
+        const header = el.closest('.header');
+        if (!header) return;
+        const desc = header.querySelector('.desc');
+        if (!desc) return;
+        desc.classList.toggle('open');
+      }
+    </script>
+  </body>
+</html>
