@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Device Instance Utility — LocalStorage Persistence Plan</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --surface: #ffffff;
+        --ink: #1a1d23;
+        --muted: #5c6570;
+        --line: #d8dee6;
+        --accent: #0b5fff;
+        --accent-soft: #e8f0ff;
+        --ok: #0f7b3a;
+        --ok-soft: #e7f7ee;
+        --warn: #9a6700;
+        --warn-soft: #fff6db;
+        --crit: #b42318;
+        --crit-soft: #fee4e2;
+        --code: #0f172a;
+        --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
+        --radius: 12px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--ink);
+        background:
+          radial-gradient(1200px 500px at 10% -10%, #dfeaff 0%, transparent 55%),
+          radial-gradient(900px 400px at 100% 0%, #e8fff4 0%, transparent 45%),
+          var(--bg);
+        line-height: 1.55;
+      }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+
+      header.doc-hero {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 28px 28px 22px;
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--accent);
+        background: var(--accent-soft);
+        padding: 4px 10px;
+        border-radius: 999px;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        max-width: 72ch;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .chip {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fafbfc;
+        color: var(--muted);
+      }
+
+      .chip.ok {
+        background: var(--ok-soft);
+        border-color: #abefc6;
+        color: var(--ok);
+      }
+
+      .chip.warn {
+        background: var(--warn-soft);
+        border-color: #f5d565;
+        color: var(--warn);
+      }
+
+      nav.toc {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 18px 20px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow);
+      }
+
+      nav.toc h2 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      nav.toc ol {
+        margin: 0;
+        padding-left: 20px;
+        columns: 2;
+        gap: 24px;
+      }
+
+      nav.toc a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      nav.toc a:hover {
+        text-decoration: underline;
+      }
+
+      section.card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 22px 24px;
+        margin-bottom: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      section.card h2 {
+        margin: 0 0 12px;
+        font-size: 1.25rem;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      section.card h3 {
+        margin: 20px 0 8px;
+        font-size: 1.05rem;
+      }
+
+      section.card h4 {
+        margin: 14px 0 6px;
+        font-size: 0.95rem;
+      }
+
+      p,
+      li {
+        color: var(--ink);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .callout {
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin: 12px 0;
+        border: 1px solid var(--line);
+        background: #fafbfc;
+      }
+
+      .callout.ok {
+        background: var(--ok-soft);
+        border-color: #abefc6;
+      }
+
+      .callout.warn {
+        background: var(--warn-soft);
+        border-color: #f5d565;
+      }
+
+      .callout.crit {
+        background: var(--crit-soft);
+        border-color: #fecdca;
+      }
+
+      .callout.accent {
+        background: var(--accent-soft);
+        border-color: #b7ceff;
+      }
+
+      .callout strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+        margin: 10px 0 6px;
+      }
+
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #f3f5f8;
+        font-weight: 700;
+      }
+
+      code,
+      .mono {
+        font-family: var(--mono);
+        font-size: 0.88em;
+      }
+
+      pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        line-height: 1.5;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      @media (max-width: 800px) {
+        nav.toc ol {
+          columns: 1;
+        }
+
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .mermaid {
+        background: #fbfdff;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px;
+        margin: 12px 0;
+        overflow-x: auto;
+      }
+
+      ul.compact > li,
+      ol.compact > li {
+        margin: 4px 0;
+      }
+
+      .kbd {
+        display: inline-block;
+        padding: 1px 6px;
+        border: 1px solid var(--line);
+        border-bottom-width: 2px;
+        border-radius: 6px;
+        background: #fff;
+        font-family: var(--mono);
+        font-size: 0.82em;
+      }
+
+      footer.note {
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        text-align: center;
+      }
+
+      .status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="doc-hero">
+        <div class="eyebrow">Device Instance Utility · Spec</div>
+        <h1>LocalStorage Persistence Plan</h1>
+        <p class="subtitle">
+          Draft-overlay persistence for Project Materials (PM), Group Templates (GT), and Group
+          Instances (GI). LocalStorage is scoped by <strong>login user ID + project ID</strong>,
+          always wins over API for persisted user choices, and is cleared only after a successful
+          <strong>Create All</strong> API call.
+        </p>
+        <div class="meta">
+          <span class="chip ok">Status: Agreed — awaiting implementation approval</span>
+          <span class="chip">Shortcuts: LS · GT · GI · PM</span>
+          <span class="chip">Scope: userId + projectId</span>
+          <span class="chip warn">Do not clear LS on logout</span>
+        </div>
+      </header>
+
+      <nav class="toc" aria-label="Table of contents">
+        <h2>Contents</h2>
+        <ol>
+          <li><a href="#goal">Goal &amp; priority rule</a></li>
+          <li><a href="#storage">Storage key &amp; shape</a></li>
+          <li><a href="#lifecycle">Lifecycle overview</a></li>
+          <li><a href="#pm">Project Materials rules</a></li>
+          <li><a href="#gt">Group Templates rules</a></li>
+          <li><a href="#gi">Group Instances rules</a></li>
+          <li><a href="#live-preview">Live Preview</a></li>
+          <li><a href="#sync">Cumulative LS → API sync</a></li>
+          <li><a href="#editing">Normal editing after sync</a></li>
+          <li><a href="#failures">Failure handling &amp; toasts</a></li>
+          <li><a href="#clear">When LS is cleared</a></li>
+          <li><a href="#orphans">Orphan / deleted-entity rules</a></li>
+          <li><a href="#architecture">Code architecture plug-in</a></li>
+          <li><a href="#flowcharts">Flowcharts</a></li>
+          <li><a href="#checklist">Implementation checklist</a></li>
+          <li><a href="#open">Locked decisions log</a></li>
+        </ol>
+      </nav>
+
+      <!-- 1 -->
+      <section class="card" id="goal">
+        <h2>1. Goal &amp; priority rule</h2>
+        <p>
+          Persist the user’s in-progress work across page refresh and Refresh Materials until they
+          click <strong>Create All</strong> and that API call succeeds. Another user with the same
+          project ID but a different login must never see this draft.
+        </p>
+        <div class="callout accent">
+          <strong>Priority (non-negotiable)</strong>
+          For every field we choose to persist:
+          <br />
+          <code>Display = LocalStorage (if present &amp; still valid) → else API / auto-derived</code>
+        </div>
+        <ul class="compact">
+          <li>LS data = highest priority for persisted fields.</li>
+          <li>Derived fields (Used, Remaining, status counts, Live Preview) are never stored.</li>
+          <li>Display names (device name, subclass name) are never stored — only IDs; names resolve from latest API lists.</li>
+        </ul>
+      </section>
+
+      <!-- 2 -->
+      <section class="card" id="storage">
+        <h2>2. Storage key &amp; shape</h2>
+        <h3>Key</h3>
+        <pre>deviceInstanceUtility_{userId}_{projectId}</pre>
+        <ul class="compact">
+          <li><code>userId</code> from existing <code>localStorage.userId</code> / <code>getUserId()</code></li>
+          <li><code>projectId</code> from route params</li>
+          <li>If <code>userId</code> is missing → do not read/write LS (session-only fallback)</li>
+        </ul>
+
+        <h3>Draft payload (single JSON blob)</h3>
+        <pre>
+type DeviceInstanceUtilityDraft = {
+  version: 1;
+  updatedAt: string; // ISO timestamp
+  projectMaterials: {
+    [deviceId: string]: {
+      subclassId: number | null; // user choice; resolve name from latest subclass list
+      isOverride: boolean;       // Override acknowledgment — LS wins
+      isHidden: boolean;         // Actions hide/show — LS wins
+    };
+  };
+  groupTemplates: {
+    [templateId: string]: {
+      reference: string;
+      description: string;
+      parentSubclassId: number | null;
+      instances: number;
+      devices: Array&lt;{
+        id: string;                 // device row id (server or local)
+        materialId: number;         // FK to PM device id
+        friendlyDescription: string;
+        sortOrder: number;
+      }&gt;;
+      // NOT stored: Devices count, Remaining, Status
+    };
+  };
+  groupInstances: {
+    // ONLY when user renumbered or manually edited Group ID / Group Name
+    [instanceKey: string]: {      // key = `${templateId}:${instanceIndex}`
+      groupId?: string;
+      groupName?: string;
+      isGroupIdCustom: boolean;
+      isGroupNameCustom: boolean;
+    };
+  };
+};</pre>
+        <div class="callout ok">
+          <strong>Why one blob?</strong>
+          Atomic clear on Create All success, one version field, and consistent PM ↔ GT ↔ GI pruning.
+        </div>
+      </section>
+
+      <!-- 3 -->
+      <section class="card" id="lifecycle">
+        <h2>3. Lifecycle overview</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>First visit (no LS)</td>
+              <td>Seed UI from API only (current behavior).</td>
+            </tr>
+            <tr>
+              <td>Page refresh / revisit</td>
+              <td>Fetch API → reconcile with LS → render available LS+API values → run cumulative LS→API sync per dirty row.</td>
+            </tr>
+            <tr>
+              <td>Refresh Materials button</td>
+              <td>Same as page refresh path for PM (+ cascading prune into GT/GI). Then cumulative sync.</td>
+            </tr>
+            <tr>
+              <td>Normal edits after render/sync</td>
+              <td>Preserve today’s behavior (e.g. blur on Reference → immediate update API). Also debounce-write React state → LS.</td>
+            </tr>
+            <tr>
+              <td>Create All success</td>
+              <td>Clear React draft effects + <code>removeItem</code> for that user+project key.</td>
+            </tr>
+            <tr>
+              <td>Create All failure</td>
+              <td>Do not clear LS.</td>
+            </tr>
+            <tr>
+              <td>Logout</td>
+              <td><strong>Do not clear</strong> DIU LS (kept until Create All succeeds).</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 4 -->
+      <section class="card" id="pm">
+        <h2>4. Project Materials (PM)</h2>
+
+        <h3>What to store</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Persist?</th>
+              <th>Display / calculation rule</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Device ID</td>
+              <td>Yes (map key)</td>
+              <td>
+                Must exist in latest PM API list. If missing → remove device + related details from LS
+                and remove that device from every GT that references it. <strong>Never recreate</strong>
+                a missing PM device from LS.
+              </td>
+            </tr>
+            <tr>
+              <td>Device name / make / model / ppmQty / status</td>
+              <td>No</td>
+              <td>Always from latest API. GT device name display also resolves from latest PM list via device id.</td>
+            </tr>
+            <tr>
+              <td>iTrac Subclass</td>
+              <td>Store <code>subclassId</code> only</td>
+              <td>
+                If id missing from latest <code>GetProjectSubclasses</code> → delete from LS and all
+                occurrences (PM + GT parent subclass). If valid → show latest name for that id.
+              </td>
+            </tr>
+            <tr>
+              <td>Override</td>
+              <td>Yes (<code>isOverride</code>)</td>
+              <td>LS always takes precedence over API.</td>
+            </tr>
+            <tr>
+              <td>Used</td>
+              <td>No</td>
+              <td>
+                Dynamic:
+                <code>baseUsed (API) + Σ(GT instances count for templates that include this device)</code>
+              </td>
+            </tr>
+            <tr>
+              <td>Remaining</td>
+              <td>No</td>
+              <td>Dynamic: <code>ppmQty (latest API) − Used (dynamic)</code></td>
+            </tr>
+            <tr>
+              <td>Actions (Hide / Show)</td>
+              <td>Yes (<code>isHidden</code>)</td>
+              <td>LS overrides API visibility. See Actions behavior below.</td>
+            </tr>
+            <tr>
+              <td>All other columns</td>
+              <td>No</td>
+              <td>Latest API values only.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Actions column behavior (Hide / Show)</h3>
+        <ol>
+          <li>
+            Clicking <strong>Hide</strong> partially greys out the row. User can still edit that PM row.
+            Action label becomes <strong>Show</strong>.
+          </li>
+          <li>
+            While greyed/hidden: if header checkbox <strong>Show hidden (n)</strong> is unchecked, the
+            row becomes fully invisible in the PM table.
+          </li>
+          <li>
+            While greyed/hidden: that device is <strong>removed from the GT child-row device Select
+            dropdown</strong> in every template.
+          </li>
+          <li>
+            Clicking <strong>Show</strong> removes the grey-out and restores dropdown eligibility.
+          </li>
+        </ol>
+
+        <h3>Non-PPM materials</h3>
+        <p>
+          Same LS rules apply (subclass / override / hide) until Create All succeeds.
+        </p>
+      </section>
+
+      <!-- 5 -->
+      <section class="card" id="gt">
+        <h2>5. Group Templates (GT)</h2>
+
+        <h3>What to store</h3>
+        <ul class="compact">
+          <li><code>reference</code></li>
+          <li><code>description</code></li>
+          <li><code>parentSubclassId</code> (id only; resolve latest name)</li>
+          <li><code>instances</code></li>
+          <li>Devices: <code>materialId</code> + <code>friendlyDescription</code> (+ row id / sortOrder)</li>
+          <li><code>groupTemplateId</code> as map key (for tracking / remapping)</li>
+        </ul>
+
+        <h3>What NOT to store</h3>
+        <ul class="compact">
+          <li>Devices count</li>
+          <li>Remaining</li>
+          <li>Status</li>
+          <li>Device display names (always resolve from latest PM via <code>materialId</code>)</li>
+        </ul>
+
+        <h3>Hydration / display rules</h3>
+        <ol>
+          <li>Load GT from API as base.</li>
+          <li>Overlay LS by template id — LS field values win when present.</li>
+          <li>
+            For each device line:
+            <ul>
+              <li>If <code>materialId</code> not in current PM → drop device + friendly name from that GT (and LS).</li>
+              <li>
+                If it exists → LS friendly name wins; device name shown from latest PM description for
+                that id.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Parent subclass: resolve id → latest name; if id gone → clear parent subclass in UI + LS.
+          </li>
+        </ol>
+
+        <div class="callout warn">
+          <strong>“Last editor on this machine” intent</strong>
+          User A’s LS keeps their edits even if User B changed the server template. When User A
+          returns, their draft overlays API for their session.
+        </div>
+
+        <h3>Orphan template (in LS, deleted on API)</h3>
+        <ol>
+          <li>Confirm template id is absent from latest GT API list.</li>
+          <li>
+            Recreate via API as a brand-new template using LS details, but only using devices that
+            still exist in PM.
+          </li>
+          <li>
+            If <strong>some</strong> devices are missing: create the new template with the
+            <strong>remaining existing devices</strong> (do not require all devices).
+          </li>
+          <li>
+            If <strong>no</strong> linked devices remain in PM: do not recreate (drop orphan restore).
+          </li>
+          <li>Replace old template id in LS + React state with the new generated id.</li>
+        </ol>
+        <p class="muted">
+          Note: PM devices themselves are never recreated from LS when missing from API.
+        </p>
+      </section>
+
+      <!-- 6 -->
+      <section class="card" id="gi">
+        <h2>6. Group Instances (GI)</h2>
+        <div class="callout accent">
+          <strong>Write GI to LS only when user explicitly customizes</strong>
+          Renumber Selected, or manual Group ID / Group Name edits. Pure auto-generated GI from GT
+          activity is never saved.
+        </div>
+
+        <h3>Identity key</h3>
+        <pre>${templateId}:${instanceIndex}</pre>
+        <p class="muted">
+          Stable across reload even if the in-memory UUID is regenerated. Matches existing
+          <code>syncInstancesFromTemplates</code> matching strategy.
+        </p>
+
+        <h3>Read / merge</h3>
+        <ul class="compact">
+          <li>
+            Whenever GT <code>instances &gt; 0</code> regenerates GI rows: build auto rows from GT first.
+          </li>
+          <li>
+            If LS has an entry for that instance key → LS <code>groupId</code> / <code>groupName</code>
+            always override auto values; set custom flags accordingly.
+          </li>
+          <li>
+            If no LS entry for renumber / manual Group ID / Group Name → show automatic default data
+            derived from GT changes.
+          </li>
+          <li>
+            When instance count drops → prune LS GI keys whose <code>instanceIndex</code> is out of range.
+          </li>
+        </ul>
+
+        <h3>API sync</h3>
+        <p>
+          No GI API yet. GI LS is display/draft overlay only — no cumulative GI API sync on refresh.
+        </p>
+      </section>
+
+      <!-- 7 -->
+      <section class="card" id="live-preview">
+        <h2>7. Live Preview</h2>
+        <p>
+          No LocalStorage. Group Instances table (with LS overlays where applicable) drives preview
+          automatically via existing derivation.
+        </p>
+      </section>
+
+      <!-- 8 -->
+      <section class="card" id="sync">
+        <h2>8. Cumulative LS → API sync</h2>
+
+        <div class="callout crit">
+          <strong>When this runs (only these moments)</strong>
+          <ol class="compact" style="margin: 6px 0 0; padding-left: 18px">
+            <li>User refreshes the page (initial load with LS present)</li>
+            <li>User clicks Refresh Materials</li>
+          </ol>
+          It does <em>not</em> replace normal per-field update behavior after the page has rendered.
+        </div>
+
+        <h3>What “cumulative” means</h3>
+        <ul class="compact">
+          <li><strong>Per row, one API call</strong> carrying all available fields for that row (not one HTTP call per field).</li>
+          <li>PM: 1 material row → 1 patch/update call.</li>
+          <li>GT: 1 template row → 1 cumulative update call for that template (parent + its device ops as required by existing APIs).</li>
+          <li>Run row calls in parallel via <code>Promise.allSettled</code> (not one mega-payload for the whole section — current APIs are per-id).</li>
+        </ul>
+
+        <h3>Do NOT wait for every field to be non-empty</h3>
+        <div class="callout ok">
+          <strong>Trigger rule</strong>
+          After UI has finished filling/rendering the merge of <em>available</em> LS values +
+          <em>available</em> API values for that row, fire the cumulative call for that row.
+          <br /><br />
+          Example: LS has Reference + Parent Subclass; API has Friendly Name; Description is empty in
+          both → still sync immediately with whatever is available. Empty Description must not delay
+          the call.
+        </div>
+
+        <h3>Recommended call strategy</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Option</th>
+              <th>Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1 single API call for all PM rows / all GT rows</td>
+              <td>
+                <strong>Not recommended</strong> — no bulk endpoint today; harder partial-failure handling.
+              </td>
+            </tr>
+            <tr>
+              <td>1 cumulative call per row, parallelized</td>
+              <td>
+                <strong>Chosen</strong> — matches existing APIs; isolates failures; supports the
+                toast rules below.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 9 -->
+      <section class="card" id="editing">
+        <h2>9. Normal editing after sync (preserve current behavior)</h2>
+        <p>
+          Once LS/API data are rendered and the load/refresh cumulative sync attempts are done, user
+          activity must keep the <strong>pre-LS</strong> update behavior:
+        </p>
+        <ul class="compact">
+          <li>Change Reference on template 1 → lose focus → update API fires immediately (as today).</li>
+          <li>Same for other existing blur/immediate update paths in PM and GT.</li>
+          <li>Every meaningful edit also debounced-writes into LS so refresh can restore the draft.</li>
+        </ul>
+        <div class="callout warn">
+          <strong>Two modes, one page</strong>
+          <br />Mode A — Load/Refresh: cumulative per-row LS→API sync.
+          <br />Mode B — Interactive editing: existing immediate/blur updates + LS write-through.
+        </div>
+      </section>
+
+      <!-- 10 -->
+      <section class="card" id="failures">
+        <h2>10. Failure handling &amp; toasts</h2>
+        <p>
+          If a cumulative update/patch fails after loading from LS, and the corresponding id still
+          exists on the API:
+        </p>
+        <ol>
+          <li>Populate that row in the UI from <strong>API data</strong> (not the failed LS overlay for that row).</li>
+          <li>Keep LS draft unchanged so a later refresh can retry.</li>
+          <li>Warn the user with a sticky toast (see below).</li>
+        </ol>
+
+        <h3>Toast content</h3>
+        <div class="grid-2">
+          <div class="callout crit">
+            <strong>Project Materials failure</strong>
+            Include <strong>device name + device id</strong> with an appropriate message that sync
+            from draft failed and they should refresh the page to retry applying LS.
+          </div>
+          <div class="callout crit">
+            <strong>Group Template failure</strong>
+            Include <strong>template name + template id</strong> with an appropriate message that sync
+            from draft failed and they should refresh the page to retry applying LS.
+          </div>
+        </div>
+
+        <h3>Toast dismiss behavior</h3>
+        <div class="callout warn">
+          <strong>Sticky until manual close</strong>
+          If there is any failure toast from this sync path, it must <em>not</em> auto-hide.
+          It closes only when the user clicks the toast close (×) icon.
+        </div>
+      </section>
+
+      <!-- 11 -->
+      <section class="card" id="clear">
+        <h2>11. When LS is cleared</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Situation</th>
+              <th>Clear LS?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Create All API success (<code>ResponseCode === true</code>)</td>
+              <td><strong>Yes</strong> — entire draft for that userId + projectId</td>
+            </tr>
+            <tr>
+              <td>Create All API failure</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td>Page refresh / Refresh Materials</td>
+              <td>No (reconcile/prune only)</td>
+            </tr>
+            <tr>
+              <td>Logout</td>
+              <td>No (explicit product decision for now)</td>
+            </tr>
+            <tr>
+              <td>Partial cumulative sync failure</td>
+              <td>No — keep draft for retry</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 12 -->
+      <section class="card" id="orphans">
+        <h2>12. Orphan / deleted-entity rules (summary)</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Case</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PM device in LS, missing from API</td>
+              <td>Remove from LS; strip from all GT device lines. Never recreate device.</td>
+            </tr>
+            <tr>
+              <td>Subclass id in LS, missing from subclass API</td>
+              <td>Delete from LS and all occurrences (PM + GT parent subclass).</td>
+            </tr>
+            <tr>
+              <td>GT in LS, missing from API; ≥1 devices still in PM</td>
+              <td>Create new template with remaining existing devices; remap id in LS.</td>
+            </tr>
+            <tr>
+              <td>GT in LS, missing from API; zero devices left in PM</td>
+              <td>Do not recreate; drop orphan restore.</td>
+            </tr>
+            <tr>
+              <td>GT device materialId missing from PM</td>
+              <td>Drop that device (+ friendly name) from the template/LS only.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 13 -->
+      <section class="card" id="architecture">
+        <h2>13. Code architecture plug-in</h2>
+        <pre>
+index.tsx
+  └─ useDeviceInstancePage                 ← orchestration + Create All clear + Mode A sync
+       ├─ useDeviceInstanceState           ← React source of truth for UI
+       └─ useDeviceInstanceDraftStorage    ← NEW: read / reconcile / write / clear
+            key = userId + projectId
+
+Suggested folder:
+DeviceInstanceUtility/persistence/
+  types.ts
+  storageKey.ts
+  readWriteClear.ts
+  reconcileMaterials.ts
+  reconcileTemplates.ts
+  reconcileInstances.ts
+  buildDraftFromState.ts
+  syncDraftToApi.ts          ← Mode A cumulative per-row calls
+  useDeviceInstanceDraftStorage.ts</pre>
+        <p class="muted">
+          Mirror patterns from <code>useManualProjectsStorage</code> /
+          <code>projectConfigStorage</code> / DeficiencyReport keying: try/catch, versioned schema,
+          never crash on corrupt JSON.
+        </p>
+      </section>
+
+      <!-- 14 -->
+      <section class="card" id="flowcharts">
+        <h2>14. Flowcharts</h2>
+
+        <h3>14.1 End-to-end lifecycle</h3>
+        <div class="mermaid">
+flowchart TD
+  A[Page load or Refresh Materials] --> B[Fetch latest API: subclasses + PM + GT]
+  B --> C[Read LS draft for userId + projectId]
+  C --> D[Reconcile and prune invalid devices / subclasses]
+  D --> E{Orphan GT in LS?}
+  E -->|Yes and remaining devices exist in PM| F[Create new GT via API with remaining devices and remap id in LS]
+  E -->|Yes and no devices left| G[Drop orphan GT from draft]
+  E -->|No| H[Merge API base + LS overlay into React state]
+  F --> H
+  G --> H
+  H --> I[Render UI with available LS + API values]
+  I --> J[Mode A: per-row cumulative LS to API sync]
+  J --> K{Each row result}
+  K -->|Success| L[Keep synced values in UI]
+  K -->|Fail and id still on API| M[Show API values for that row + sticky toast with name and id]
+  K -->|Id gone| N[Apply orphan / prune rules]
+  L --> O[Mode B: normal editing]
+  M --> O
+  N --> O
+  O --> P[Existing blur or immediate API updates + debounced LS write]
+  P --> O
+  O --> Q[Create All clicked]
+  Q --> R{API success?}
+  R -->|Yes| S[Clear React draft effects + remove LS key]
+  R -->|No| T[Keep LS and UI state]
+        </div>
+
+        <h3>14.2 Priority / display resolution</h3>
+        <div class="mermaid">
+flowchart LR
+  A[Need display value for a persisted field] --> B{Valid LS value for this user + project?}
+  B -->|Yes| C[Use LS value]
+  B -->|No| D[Use API or auto-derived value]
+  C --> E[Resolve names from latest API lists using stored ids]
+  D --> E
+  E --> F[Render UI]
+        </div>
+
+        <h3>14.3 Project Materials reconcile</h3>
+        <div class="mermaid">
+flowchart TD
+  A[Latest PM API list] --> B[For each LS device id]
+  B --> C{Device id in API list?}
+  C -->|No| D[Remove from LS]
+  D --> E[Remove materialId from all GT device rows]
+  C -->|Yes| F[Apply LS subclassId / isOverride / isHidden]
+  F --> G[Resolve subclass name from latest subclass list]
+  G --> H[Take description make model ppmQty baseUsed from API]
+  H --> I[Compute Used and Remaining dynamically]
+  E --> I
+        </div>
+
+        <h3>14.4 Group Template orphan recreate</h3>
+        <div class="mermaid">
+flowchart TD
+  A[LS template id not in GT API] --> B[Filter LS devices to those still in PM]
+  B --> C{Any devices remain?}
+  C -->|No| D[Do not recreate - drop from LS]
+  C -->|Yes| E[Create blank template via API]
+  E --> F[Apply LS reference description parentSubclass instances]
+  F --> G[Attach remaining devices + friendly names]
+  G --> H[Replace old id with new id in LS and state]
+        </div>
+
+        <h3>14.5 Group Instances overlay</h3>
+        <div class="mermaid">
+flowchart TD
+  A[GT instances count greater than 0] --> B[Derive auto GI rows from GT]
+  B --> C{LS entry for templateId:instanceIndex?}
+  C -->|Yes from renumber or manual edit| D[Override groupId / groupName from LS]
+  C -->|No| E[Keep auto values from GT]
+  D --> F[Render GI table]
+  E --> F
+        </div>
+
+        <h3>14.6 Mode A sync vs Mode B editing</h3>
+        <div class="mermaid">
+flowchart TD
+  A[UI render of merged LS + API complete for a row] --> B[Mode A cumulative API call for that row]
+  B --> C{Success?}
+  C -->|No| D[Sticky failure toast with entity name + id]
+  C -->|Yes| E[Row aligned]
+  D --> F[User continues]
+  E --> F
+  F --> G[User edits a field]
+  G --> H[Mode B: existing immediate or blur update API]
+  H --> I[Debounced write full draft to LS]
+  I --> G
+        </div>
+
+        <h3>14.7 Create All clear gate</h3>
+        <div class="mermaid">
+flowchart TD
+  A[Create All confirmed] --> B[POST AddMultipleDevicesBySubclassId]
+  B --> C{ResponseCode true?}
+  C -->|Yes| D[clearAfterCreateAllSuccess in React state]
+  D --> E[localStorage.removeItem deviceInstanceUtility_userId_projectId]
+  C -->|No| F[Keep LS entirely - show error]
+        </div>
+      </section>
+
+      <!-- 15 -->
+      <section class="card" id="checklist">
+        <h2>15. Implementation checklist (when approved)</h2>
+        <ol>
+          <li>Persistence module: types, key, read/write/clear, version handling.</li>
+          <li>PM reconcile + refresh path (device prune, subclass prune, Actions/override overlay).</li>
+          <li>GT reconcile + orphan recreate with remaining devices + id remap.</li>
+          <li>GI overlay for renumber / manual Group ID / Group Name only.</li>
+          <li>Wire seed path in <code>useDeviceInstancePage</code>: API → reconcile → render → Mode A sync.</li>
+          <li>Mode A sync: per-row cumulative calls via <code>Promise.allSettled</code>; sticky toasts with name+id.</li>
+          <li>Mode B: preserve existing blur/immediate updates; debounce LS write-through.</li>
+          <li>Create All success → clear LS key.</li>
+          <li>Unit tests for reconcile / prune / orphan recreate / GI overlay.</li>
+        </ol>
+      </section>
+
+      <!-- 16 -->
+      <section class="card" id="open">
+        <h2>16. Locked decisions log</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Topic</th>
+              <th>Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Actions column</td>
+              <td>
+                Persist <code>isHidden</code>. Grey-out, Show-hidden filter, and exclusion from GT
+                device dropdown all remain UI behaviors driven by that flag.
+              </td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Orphan GT</td>
+              <td>
+                Recreate with devices that still exist in PM; remap to new id. If zero devices remain,
+                do not recreate. Never recreate missing PM devices.
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Non-PPM</td>
+              <td>Persist in LS until Create All success (same as other materials).</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>“Wait until complete” confusion</td>
+              <td>
+                Resolved: cumulative sync on load/refresh does <strong>not</strong> wait for all fields
+                to be non-empty. Sync when available LS+API values for that row are rendered.
+              </td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Logout</td>
+              <td>Do not clear DIU LS.</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>Sync granularity</td>
+              <td>1 row → 1 cumulative API call, parallelized. Not one mega-call for the section.</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>Post-sync editing</td>
+              <td>Preserve current immediate/blur API update behavior.</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>Failure UX</td>
+              <td>
+                Show API row data; keep LS; sticky toast with PM device name+id or GT template name+id;
+                close only via ×.
+              </td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>GI LS priority</td>
+              <td>
+                Only if renumber / manual Group ID / Group Name happened; otherwise auto from GT.
+              </td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>Live Preview</td>
+              <td>No LS; derived automatically.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout ok" style="margin-top: 16px">
+          <strong>Next step</strong>
+          This document is the source of truth for implementation. Do not start coding until explicit
+          permission is given after reviewing this file.
+        </div>
+      </section>
+
+      <footer class="note">
+        Device Instance Utility · LocalStorage Persistence Plan · Generated for team reference ·
+        Open this file in any browser. Flowcharts render via Mermaid CDN.
+      </footer>
+    </div>
+
+    <script>
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "neutral",
+        securityLevel: "loose",
+        flowchart: { curve: "basis", htmlLabels: true }
+      });
+    </script>
+  </body>
+</html>

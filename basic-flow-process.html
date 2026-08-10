@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Device Instance Utility — Persistence Explained Simply</title>
+    <style>
+      :root {
+        --bg: #f6f1e8;
+        --paper: #fffaf2;
+        --ink: #2a241c;
+        --soft: #6b5f50;
+        --line: #e2d6c4;
+        --green: #1f6b57;
+        --green-soft: #e8f4ef;
+        --amber: #9a5b12;
+        --amber-soft: #f8edd9;
+        --blue: #2f4f7a;
+        --blue-soft: #e8eef7;
+        --shadow: 0 8px 28px rgba(42, 36, 28, 0.07);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, 'Times New Roman', serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 0% 0%, #efe2cb 0%, transparent 35%),
+          linear-gradient(180deg, #faf5ec 0%, var(--bg) 100%);
+        line-height: 1.7;
+        font-size: 18px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-height: 100vh;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        padding: 1.5rem 1.2rem 2rem;
+        border-right: 1px solid var(--line);
+        background: rgba(255, 250, 242, 0.94);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+      }
+
+      nav .eyebrow {
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #8a7b66;
+        margin-bottom: 0.35rem;
+      }
+
+      nav h1 {
+        font-family: Georgia, serif;
+        font-size: 1.15rem;
+        margin: 0 0 0.5rem;
+        line-height: 1.3;
+      }
+
+      nav .note {
+        font-size: 0.85rem;
+        color: var(--soft);
+        margin: 0 0 1.25rem;
+        line-height: 1.45;
+      }
+
+      nav .group {
+        margin: 1.1rem 0 0.35rem;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #8a7b66;
+        padding-left: 0.4rem;
+      }
+
+      nav a {
+        display: block;
+        text-decoration: none;
+        color: var(--soft);
+        padding: 0.4rem 0.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        margin-bottom: 0.15rem;
+      }
+
+      nav a:hover,
+      nav a:focus-visible {
+        background: var(--green-soft);
+        color: var(--green);
+      }
+
+      main {
+        padding: 2.25rem 2.75rem 5rem;
+        max-width: 860px;
+      }
+
+      .paper {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 1.75rem 1.9rem;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+      }
+
+      h2 {
+        font-size: 1.85rem;
+        margin: 0 0 0.85rem;
+        line-height: 1.25;
+      }
+
+      h3 {
+        font-size: 1.4rem;
+        margin: 0 0 0.75rem;
+        line-height: 1.3;
+      }
+
+      h4 {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #7a6b58;
+        margin: 1.6rem 0 0.7rem;
+      }
+
+      p {
+        margin: 0 0 1rem;
+      }
+
+      ul,
+      ol {
+        margin: 0 0 1rem;
+        padding-left: 1.3rem;
+      }
+
+      li {
+        margin-bottom: 0.55rem;
+      }
+
+      .lead {
+        font-size: 1.08rem;
+        color: var(--soft);
+      }
+
+      .analogy {
+        background: var(--amber-soft);
+        border: 1px solid #ecd7b2;
+        border-radius: 14px;
+        padding: 1rem 1.15rem;
+        margin: 1.1rem 0;
+        color: #5f3d14;
+      }
+
+      .analogy strong {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .connect {
+        background: var(--blue-soft);
+        border: 1px solid #c9d6ea;
+        border-radius: 14px;
+        padding: 1rem 1.15rem;
+        margin: 1.1rem 0;
+      }
+
+      .connect strong {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--blue);
+      }
+
+      .step-card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1rem 1.15rem;
+        margin: 0.85rem 0;
+        background: #fffdf8;
+      }
+
+      .step-card .num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: var(--green);
+        color: white;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+      }
+
+      .step-card h5 {
+        display: inline;
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .fn-block {
+        border-top: 1px solid var(--line);
+        padding: 1.1rem 0;
+      }
+
+      .fn-block:first-of-type {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .fn-title {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: var(--green);
+        margin-bottom: 0.45rem;
+      }
+
+      .tag {
+        display: inline-block;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.72rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        background: var(--green-soft);
+        color: var(--green);
+        margin-left: 0.35rem;
+        vertical-align: middle;
+      }
+
+      .tag.quiet {
+        background: #f0ebe2;
+        color: #6d6254;
+      }
+
+      .map {
+        display: grid;
+        gap: 0.65rem;
+        margin: 1rem 0;
+      }
+
+      .map-row {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 0.75rem;
+        align-items: start;
+        padding: 0.75rem 0.9rem;
+        border-radius: 12px;
+        background: var(--green-soft);
+        border: 1px solid #c9e2d8;
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        font-size: 0.95rem;
+      }
+
+      .map-row b {
+        color: var(--green);
+      }
+
+      .footnote {
+        font-size: 0.95rem;
+        color: var(--soft);
+      }
+
+      @media (max-width: 920px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        nav {
+          position: relative;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        main {
+          padding: 1.25rem;
+        }
+
+        .map-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav>
+        <div class="eyebrow">Plain-language guide</div>
+        <h1>How the “save my work” system works</h1>
+        <p class="note">
+          Written for product managers and other non-coders. The technical guide still exists beside
+          this file if you need it later.
+        </p>
+
+        <div class="group">Start here</div>
+        <a href="#story">The story in one page</a>
+        <a href="#journey">What happens when someone opens the page</a>
+        <a href="#while-editing">What happens while they edit</a>
+        <a href="#family">How the files work together</a>
+
+        <div class="group">Each file, explained</div>
+        <a href="#orchestrator">The manager (main hook)</a>
+        <a href="#draftStorage">The filing cabinet</a>
+        <a href="#buildDraft">Taking a snapshot</a>
+        <a href="#applyInstance">Restoring group labels</a>
+        <a href="#reconcileMaterials">Merging materials</a>
+        <a href="#reconcileTemplates">Merging templates</a>
+        <a href="#orphanMaterials">Bringing deleted materials back</a>
+        <a href="#orphanTemplates">Bringing deleted templates back</a>
+        <a href="#sync">Sending changes to the server</a>
+        <a href="#subclass">Name ↔ ID helpers</a>
+
+        <div class="group">Wrap-up</div>
+        <a href="#cheatsheet">Quick memory sheet</a>
+      </nav>
+
+      <main>
+        <!-- ============================================================ -->
+        <section class="paper" id="story">
+          <h2>The story in one page</h2>
+          <p class="lead">
+            Imagine a person is building a list of devices for a project. They pick materials, create
+            templates, rename groups, hide rows, and so on. Then they close the browser tab by
+            accident — or refresh the page — before pressing the final “Create All” button.
+          </p>
+          <p>
+            Without this system, all of that unfinished work would disappear. With this system, the
+            page quietly keeps a personal notebook of their unfinished work on their own computer
+            (in the browser’s storage). When they come back, the page opens that notebook, compares
+            it with the latest official records from the company server, carefully stitches the two
+            together, and puts the person back where they left off as much as possible.
+          </p>
+
+          <div class="analogy">
+            <strong>Everyday analogy</strong>
+            Think of the company server as the official project binder in the office. The browser
+            storage is a sticky-note pad the person keeps in their pocket. The persistence folder is
+            the assistant who:
+            <ol>
+              <li>copies important sticky notes into the pocket pad while they work,</li>
+              <li>opens the pad when they return,</li>
+              <li>checks the official binder for updates,</li>
+              <li>merges “my notes” with “official binder”,</li>
+              <li>and, when needed, asks the office to update the official binder to match.</li>
+            </ol>
+          </div>
+
+          <p>
+            This folder does <em>not</em> draw the tables on the screen. It does not decide button
+            labels. Its only job is: <strong>remember unfinished work, restore it safely, and keep
+            the official records in sync when that makes sense</strong>.
+          </p>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="journey">
+          <h2>What happens when someone opens the page</h2>
+          <p>
+            This is the long path — the one that runs when the page first loads (or after a materials
+            refresh). Read it top to bottom like a journey.
+          </p>
+
+          <div class="step-card">
+            <span class="num">1</span>
+            <h5>Wait until the official data arrives</h5>
+            <p>
+              The page first asks the company server for the latest materials, templates, and
+              subclass names. The “save my work” system does not start merging until that official
+              data is ready. Otherwise it would be guessing.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="num">2</span>
+            <h5>Open the personal notebook</h5>
+            <p>
+              The filing-cabinet file (<a href="#draftStorage">draftStorage</a>) looks for a notebook
+              belonging to <em>this user</em> and <em>this project</em>. If none exists, it starts with
+              a blank notebook.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="num">3</span>
+            <h5>Merge materials: notebook vs official list</h5>
+            <p>
+              <a href="#reconcileMaterials">reconcileMaterials</a> compares every material in the
+              notebook with the official materials list.
+            </p>
+            <ul>
+              <li>
+                If a material still exists officially, the person’s saved choices (subclass,
+                override, hide/show) usually win over the older official values.
+              </li>
+              <li>
+                If a normal PPM material disappeared from the official list, we drop it from the
+                notebook. We do not invent it again.
+              </li>
+              <li>
+                If a hand-added “Not in PPM” material disappeared, we mark it as something we may try
+                to recreate later — but only if the notebook still has enough details (name, make,
+                model, subclass, quantity).
+              </li>
+            </ul>
+          </div>
+
+          <div class="step-card">
+            <span class="num">4</span>
+            <h5>Recreate missing hand-added materials (if needed)</h5>
+            <p>
+              <a href="#orphanMaterials">recreateOrphanCustomMaterials</a> asks the server to create
+              those missing “Not in PPM” materials again. Because the server gives them new IDs, this
+              file also updates the notebook (and any template links) so they point to the new IDs
+              instead of the old ones.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="num">5</span>
+            <h5>Merge templates: notebook vs official list</h5>
+            <p>
+              <a href="#reconcileTemplates">reconcileTemplates</a> does the same kind of merge for
+              group templates. Saved names, descriptions, parent subclass, instance counts, and
+              friendly device names from the notebook are preferred when the template still exists
+              officially. Template devices that point at materials that no longer exist are removed.
+              Templates that exist only in the notebook (deleted on the server) become candidates to
+              recreate — but only if they still have at least one valid device left.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="num">6</span>
+            <h5>Recreate missing templates (if needed)</h5>
+            <p>
+              <a href="#orphanTemplates">recreateOrphanTemplates</a> creates blank templates on the
+              server, fills in the saved details, re-adds the remaining devices, and rewires the
+              notebook so old template IDs become the new ones. Group-instance custom labels tied to
+              those templates are rewired too.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="num">7</span>
+            <h5>Clean up group-instance notes</h5>
+            <p>
+              If someone had customized a Group ID / Group Name for an instance that no longer makes
+              sense (template gone, or instance number out of range), those notes are thrown away.
+              Valid custom labels are kept for the next step.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="num">8</span>
+            <h5>Put the merged result on the screen</h5>
+            <p>
+              The manager hook asks the page’s main state system to load the merged materials and
+              templates. Group Instance custom labels are applied through
+              <a href="#applyInstance">applyInstanceDraft</a>. The cleaned notebook is written back
+              to the filing cabinet.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <span class="num">9</span>
+            <h5>Push the merged choices to the official binder</h5>
+            <p>
+              <a href="#sync">syncDraftToApi</a> sends only the differences that still need to be
+              saved on the server (subclass changes, override ticks, hide/show, template field
+              changes, device add/remove/reorder). If some rows fail, those rows fall back to the
+              official values on screen, but the notebook is kept so a refresh can try again. The
+              person sees a clear error message for each failed item.
+            </p>
+          </div>
+
+          <div class="connect">
+            <strong>Who is in charge of this journey?</strong>
+            The manager file — <a href="#orchestrator">useDeviceInstanceDraftPersistence</a> —
+            calls every other file in this order. The other files do not call the manager. They are
+            helpers the manager uses.
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="while-editing">
+          <h2>What happens while they edit</h2>
+          <p>
+            After the open-page journey finishes successfully, a quieter behavior turns on.
+          </p>
+          <p>
+            Every time the person changes materials, templates, or group instances, the manager does
+            <em>not</em> write to the notebook instantly. That would be noisy and wasteful. Instead it
+            waits a short moment (about a third of a second) after the latest change. If no new change
+            arrives in that window, it takes a fresh snapshot of the current screen state using
+            <a href="#buildDraft">buildDraftFromState</a> and asks the filing cabinet to store it.
+          </p>
+          <p>
+            So: editing feels instant on screen, and the notebook updates a beat later in the
+            background.
+          </p>
+          <p>
+            When “Create All” succeeds, the manager clears the notebook. The unfinished-work story is
+            over; the official project now owns those devices.
+          </p>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="family">
+          <h2>How the files work together</h2>
+          <p>
+            Here is the family map. Arrows mean “this file asks that file for help.”
+          </p>
+
+          <div class="map">
+            <div class="map-row">
+              <b>Manager hook</b>
+              <span
+                >Talks to almost everyone: filing cabinet, snapshot builder, both merge files, both
+                recreate files, and the sync file.</span
+              >
+            </div>
+            <div class="map-row">
+              <b>Filing cabinet</b>
+              <span>Does not call the others. Only reads/writes/clears the notebook.</span>
+            </div>
+            <div class="map-row">
+              <b>Snapshot builder</b>
+              <span>Uses the subclass helpers to convert readable names into IDs before saving.</span>
+            </div>
+            <div class="map-row">
+              <b>Materials merge</b>
+              <span>Uses subclass helpers. Hands orphan candidates to the materials recreate file.</span>
+            </div>
+            <div class="map-row">
+              <b>Templates merge</b>
+              <span
+                >Uses subclass helpers. Hands orphan candidates to the templates recreate file. Also
+                provides the “rename GI keys when a template ID changes” helper.</span
+              >
+            </div>
+            <div class="map-row">
+              <b>Materials recreate</b>
+              <span
+                >Uses the materials merge’s orphan list. Updates the notebook and template links after
+                new IDs arrive.</span
+              >
+            </div>
+            <div class="map-row">
+              <b>Templates recreate</b>
+              <span
+                >Uses the templates merge’s orphan list and the GI-key remapper. Updates the notebook
+                after new template IDs arrive.</span
+              >
+            </div>
+            <div class="map-row">
+              <b>Sync to server</b>
+              <span
+                >Uses subclass helpers and compares the merged screen state against the official
+                baseline. Reports failures so the manager can revert those rows on screen.</span
+              >
+            </div>
+            <div class="map-row">
+              <b>Apply instance draft</b>
+              <span
+                >Used when the screen rebuilds Group Instances, so custom Group ID / Group Name notes
+                reappear.</span
+              >
+            </div>
+          </div>
+
+          <div class="analogy">
+            <strong>Order that matters</strong>
+            Materials recreate happens <em>before</em> template merge/recreate on purpose. Templates
+            point at materials by ID. If we recreated templates first, they might still point at dead
+            material IDs. By recreating materials first and remapping IDs, templates can safely link
+            to the new material IDs.
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="orchestrator">
+          <h3>The manager — useDeviceInstanceDraftPersistence</h3>
+          <p>
+            This is the only file that “runs the show.” It is a long-lived assistant attached to the
+            page. It does not draw UI. It decides <em>when</em> to read the notebook, <em>when</em> to
+            merge, <em>when</em> to recreate, <em>when</em> to sync, and <em>when</em> to allow quiet
+            auto-saving while the person edits.
+          </p>
+
+          <div class="connect">
+            <strong>Depends on</strong>
+            draftStorage, buildDraftFromState, reconcileMaterials, recreateOrphanCustomMaterials,
+            reconcileTemplates, recreateOrphanTemplates, syncDraftToApi — plus the page’s own state
+            callbacks that put merged data onto the screen.
+          </div>
+
+          <h4>What each piece inside it does</h4>
+
+          <div class="fn-block">
+            <div class="fn-title">The main hook itself <span class="tag">public</span></div>
+            <p>
+              This is the entrance. The page hands it the current official materials/templates, the
+              current on-screen materials/templates/instances, the subclass list, and two “please
+              update the screen” callbacks. In return, the page gets two tools:
+            </p>
+            <ul>
+              <li>one for re-running the merge after a materials refresh, and</li>
+              <li>one for wiping the notebook after Create All succeeds.</li>
+            </ul>
+            <p>
+              Inside, it also keeps a few memory flags, like sticky notes on the assistant’s desk:
+              “Have I already restored once?”, “Am I mid-restore right now?”, and “Am I allowed to
+              auto-save while the user edits?”
+            </p>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">showSyncFailureToasts <span class="tag quiet">helper inside the file</span></div>
+            <p>
+              If sending some rows to the server fails, this shows lasting error messages naming the
+              failed device or template. The messages stay until the person closes them, because this
+              is important: their notebook still has the work, but the official binder rejected part
+              of the update.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Called by <em>runModeASync</em> when the sync file reports failures.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">runModeASync <span class="tag quiet">helper inside the file</span></div>
+            <p>
+              This is the “please update the official binder” step after a merge. It calls the sync
+              file. If anything fails:
+            </p>
+            <ul>
+              <li>it rewrites the notebook with the draft we wanted to keep (so auto-save cannot
+                overwrite good notes with a reverted screen),</li>
+              <li>it turns off quiet auto-save temporarily,</li>
+              <li>it asks the sync helpers to put failed rows back to official values on screen,</li>
+              <li>and it shows the error toasts.</li>
+            </ul>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Uses <em>syncDraftToApi</em>, <em>revertFailedMaterialsToApi</em>, and
+              <em>revertFailedTemplatesToApi</em>. Used by both the first-load restore and the
+              refresh-materials restore.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">hydrateSessionFromDraft <span class="tag quiet">helper inside the file</span></div>
+            <p>
+              This is the full open-page journey described earlier. It is careful to run only once
+              when data is ready, and not to overlap with itself. It temporarily disables quiet
+              auto-save while restoring, so a half-finished restore cannot be written back as if it
+              were the user’s latest edits.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Calls draftStorage → reconcileMaterials → recreateOrphanCustomMaterials →
+              reconcileTemplates → recreateOrphanTemplates → screen hydrate → draftStorage write →
+              runModeASync.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">reconcileAfterMaterialsRefresh <span class="tag">public tool</span></div>
+            <p>
+              Used when the person presses Refresh Materials. Official materials may have changed
+              under them. This builds a notebook from the <em>current screen</em> (not only from
+              storage), merges against the fresh official materials, recreates missing hand-added
+              materials if needed, removes dead material links from templates, merges templates,
+              updates the screen, and syncs again.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Uses buildDraftFromState first (to capture the live session), then the same merge /
+              recreate / sync family as first load.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">Quiet auto-save effect <span class="tag quiet">background behavior</span></div>
+            <p>
+              After a successful restore, whenever materials/templates/instances change, wait briefly,
+              snapshot with buildDraftFromState, write with draftStorage. This is the “while editing”
+              behavior.
+            </p>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">clearDraftAfterCreateAllSuccess <span class="tag">public tool</span></div>
+            <p>
+              Empties the notebook after a successful Create All. Also turns quiet auto-save back on,
+              so a new round of edits can start a fresh notebook.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="draftStorage">
+          <h3>The filing cabinet — draftStorage</h3>
+          <p>
+            This file is the only one that directly touches the browser’s storage. Everything else
+            asks this file to read, write, or erase. That keeps storage rules in one place.
+          </p>
+
+          <div class="analogy">
+            <strong>Why a special key?</strong>
+            The notebook name includes both the person and the project. That way, Person A’s unfinished
+            work on Project 12 never collides with Person B’s work, or with Person A’s work on Project
+            99.
+          </div>
+
+          <h4>What each piece does</h4>
+
+          <div class="fn-block">
+            <div class="fn-title">getDeviceInstanceDraftStorageKey <span class="tag">public</span></div>
+            <p>
+              Builds the notebook’s full name. If we do not know the user or the project, it returns
+              an empty name on purpose, so the other functions refuse to read or write. Better to do
+              nothing than save under the wrong label.
+            </p>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">The parsers (isRecord, parseMaterialEntry, parseTemplateEntry, parseInstanceEntry, parseDraft) <span class="tag quiet">private helpers</span></div>
+            <p>
+              Storage can contain junk: old formats, half-written data, or hand-edited values. These
+              helpers carefully inspect each piece. Valid pieces are kept. Invalid pieces are skipped.
+              If the whole notebook is the wrong version or badly shaped, the whole read is treated as
+              “no notebook.”
+            </p>
+            <p>
+              They also tolerate older notebooks that pre-date newer fields. For example, if an older
+              note does not say whether a material was hand-added, the parser assumes it was not, so
+              we do not accidentally try to recreate something we cannot recreate safely.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Only used inside <em>readDeviceInstanceDraft</em>. No other file talks to the parsers
+              directly.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">readDeviceInstanceDraft <span class="tag">public</span></div>
+            <p>
+              Opens the notebook and returns a clean, structured copy — or “nothing found.” Never
+              crashes the page if storage is blocked or the text is corrupt.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used by the manager during first-load restore.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">writeDeviceInstanceDraft <span class="tag">public</span></div>
+            <p>
+              Saves a notebook, stamps today’s time on it, and forces the current version number.
+              Returns a simple yes/no so callers know if storage rejected the write (for example, the
+              browser is out of space).
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used by the manager after merges, after failed syncs (to preserve the good notebook),
+              and during quiet auto-save.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">clearDeviceInstanceDraft <span class="tag">public</span></div>
+            <p>Throws the notebook away. Used after Create All succeeds.</p>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">hasDeviceInstanceDraftContent <span class="tag">public</span></div>
+            <p>
+              Answers: “Is this notebook actually empty, or does it contain any materials, templates,
+              or instance notes?” Useful when the page wants to know whether there is unfinished work
+              worth mentioning.
+            </p>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">createEmptyDeviceInstanceDraft <span class="tag">public</span></div>
+            <p>
+              Hands out a brand-new blank notebook object. Used when there is no saved notebook yet,
+              so the merge steps still have a structure to work with.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="buildDraft">
+          <h3>Taking a snapshot — buildDraftFromState</h3>
+          <p>
+            This file answers one question: “If I had to write down the important unfinished choices
+            from what is on the screen right now, what would I keep?”
+          </p>
+          <p>
+            It deliberately does <em>not</em> save everything. Things that can be recalculated later
+            (like “remaining quantity after template usage”) are left out. The notebook stays small
+            and focused on choices the person made.
+          </p>
+
+          <h4>What it saves</h4>
+          <ul>
+            <li>
+              <strong>Materials:</strong> whether it is hand-added, chosen subclass, override tick,
+              hide/show, plus enough identity details (description/make/model/quantity/base used) to
+              recreate a hand-added material later if needed.
+            </li>
+            <li>
+              <strong>Templates:</strong> reference, description, parent subclass, instance count,
+              sort order, and each child device’s link to a material plus friendly name and order.
+            </li>
+            <li>
+              <strong>Group instances:</strong> only when the person customized Group ID and/or Group
+              Name. Auto-generated labels are not stored, because the page can rebuild those.
+            </li>
+          </ul>
+
+          <div class="fn-block">
+            <div class="fn-title">buildDraftFromState <span class="tag">public</span></div>
+            <p>
+              Walks the current materials, templates, and instances and builds the notebook object.
+              While doing that it converts subclass <em>names</em> (what people see in dropdowns)
+              into subclass <em>IDs</em> (what the notebook and server prefer). It also deletes
+              instance notes that point at templates/indexes that no longer exist.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Uses <a href="#subclass">subclassIds</a> for name→ID conversion. Used by the manager
+              during quiet auto-save and during refresh-materials (to capture the live session before
+              merging).
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="applyInstance">
+          <h3>Restoring group labels — applyInstanceDraft</h3>
+          <p>
+            Group Instances on the screen are mostly generated automatically from templates (one
+            template with “3 instances” becomes three groups). But people can renumber or rename
+            those groups. Those custom labels live in the notebook.
+          </p>
+          <p>
+            After the page regenerates the automatic groups, this file lays the custom labels back on
+            top — like putting personalized sticky labels onto freshly printed folders.
+          </p>
+
+          <div class="fn-block">
+            <div class="fn-title">applyInstanceDraft <span class="tag">public</span></div>
+            <p>
+              For each generated group, look up a notebook note using “template + instance number.”
+              If the note says the Group ID was customized, use the saved Group ID. If the note says
+              the Group Name was customized, use the saved Group Name. Otherwise keep the automatic
+              value.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used by the page’s main state flow after instances are derived. The notebook section it
+              reads was earlier cleaned/remapped by the manager and the orphan-template helpers.
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="reconcileMaterials">
+          <h3>Merging materials — reconcileMaterials</h3>
+          <p>
+            This is the careful comparison between “what the person saved” and “what the office
+            currently has” for Project Materials.
+          </p>
+
+          <div class="analogy">
+            <strong>Why “merge” instead of “just reload the notebook”?</strong>
+            Because the official list may have changed while the person was away. A material may have
+            been deleted. A subclass may no longer exist. Blindly reloading the notebook could show
+            ghost rows or invalid dropdown values. Merging keeps personal choices where safe, and
+            drops or recreates where necessary.
+          </div>
+
+          <h4>What each piece does</h4>
+
+          <div class="fn-block">
+            <div class="fn-title">canRecreateCustomMaterial <span class="tag quiet">private helper</span></div>
+            <p>
+              Decides whether a missing hand-added material has enough trustworthy details to ask the
+              server to create it again. Missing description/make/model, invalid subclass, or
+              non-positive quantity means “do not recreate — just drop it.”
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used only by <em>reconcileMaterials</em> while sorting notebook-only materials into
+              “prune” vs “orphan candidate.”
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">reconcileMaterials <span class="tag">public</span></div>
+            <p>Produces four important outputs together:</p>
+            <ol>
+              <li>the materials list to show (official rows + personal overlays),</li>
+              <li>IDs of materials that should be removed from templates,</li>
+              <li>hand-added materials that should be recreated,</li>
+              <li>the cleaned materials section of the notebook for the next save.</li>
+            </ol>
+            <p>
+              For materials that still exist officially, personal subclass / override / hide choices
+              win, but identity fields like description come from the official row. That avoids
+              showing stale names when the official binder was updated.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Uses <a href="#subclass">subclassIds</a>. Its orphan list is the input to
+              <a href="#orphanMaterials">recreateOrphanCustomMaterials</a>. Its removed IDs tell the
+              manager which template device links to strip during refresh.
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="reconcileTemplates">
+          <h3>Merging templates — reconcileTemplates</h3>
+          <p>
+            Same merge philosophy as materials, applied to Group Templates. Personal wording and
+            structure from the notebook are preferred when the template still exists officially.
+            Broken device links (pointing at materials that are gone) are cleaned out.
+          </p>
+
+          <h4>What each piece does</h4>
+
+          <div class="fn-block">
+            <div class="fn-title">filterDevicesAgainstMaterials <span class="tag quiet">private helper</span></div>
+            <p>
+              Keeps only child devices whose material still exists, then renumbers their order so
+              there are no gaps.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used inside <em>reconcileTemplates</em> both for still-living templates and for orphan
+              candidates.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">toUiDevices <span class="tag quiet">private helper</span></div>
+            <p>
+              Converts the notebook’s device notes into the shape the on-screen template table
+              expects.
+            </p>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">reconcileTemplates <span class="tag">public</span></div>
+            <p>
+              Walks official templates first and overlays notebook details where present. Then looks
+              for notebook templates that no longer exist officially. If such a template still has at
+              least one valid device, it becomes an orphan candidate. If it has zero valid devices
+              left, it is dropped quietly — there is nothing useful to recreate.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Uses subclass helpers. Its orphan list feeds
+              <a href="#orphanTemplates">recreateOrphanTemplates</a>. Should run after materials
+              orphans are recreated, so device links can already use new material IDs.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">remapInstanceDraftKeys <span class="tag">public</span></div>
+            <p>
+              When a template is recreated, it gets a new ID. Group-instance notes are stored under
+              keys like “oldTemplateId:2”. This helper rewrites those keys to “newTemplateId:2” so
+              custom Group ID / Group Name notes stay attached to the right groups.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used by <em>applyOrphanRemapToDraft</em> inside the templates recreate file.
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="orphanMaterials">
+          <h3>Bringing deleted materials back — recreateOrphanCustomMaterials</h3>
+          <p>
+            Sometimes a hand-added material is in the person’s notebook but gone from the official
+            list (deleted by someone else, or lost in an earlier failed flow). If we still have a
+            full enough description of it, we ask the server to create it again.
+          </p>
+          <p>
+            Important: the recreated material is not the same row with the same ID. It is a new row
+            with a new ID. So every place that remembered the old ID must be updated.
+          </p>
+
+          <h4>What each piece does</h4>
+
+          <div class="fn-block">
+            <div class="fn-title">recreateOrphanCustomMaterials <span class="tag">public</span></div>
+            <p>
+              Goes through each orphan candidate one by one. Asks the server to create it. Builds the
+              on-screen material row from the server response, then re-applies personal choices like
+              override and hide. Collects successes (with old→new ID map) and failures.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Receives candidates from <em>reconcileMaterials</em>. Uses shared conversion helpers
+              outside this folder to turn the server response into a screen row. Its results are
+              immediately passed to <em>applyCustomMaterialRemapToDraft</em>.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">applyCustomMaterialRemapToDraft <span class="tag">public</span></div>
+            <p>
+              Updates the notebook after recreate attempts:
+            </p>
+            <ul>
+              <li>failed old IDs are deleted from the notebook,</li>
+              <li>successful old IDs are removed and rewritten under the new IDs,</li>
+              <li>
+                every template device in the notebook that pointed at an old ID is pointed at the new
+                ID instead.
+              </li>
+            </ul>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Always used right after <em>recreateOrphanCustomMaterials</em> inside the manager.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">remapTemplateMaterialIds <span class="tag">public</span></div>
+            <p>
+              Same old→new material ID rewrite, but for the templates currently sitting in screen
+              memory (not the notebook). Used on the refresh-materials path so the on-screen templates
+              do not keep dead links while the next merge runs.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used by the manager’s refresh flow, usually together with removing materials that were
+              pruned and never successfully recreated.
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="orphanTemplates">
+          <h3>Bringing deleted templates back — recreateOrphanTemplates</h3>
+          <p>
+            Same idea as materials orphans, but for Group Templates. If a template lives in the
+            notebook and not on the server, and it still has valid devices, we rebuild it on the
+            server in careful steps.
+          </p>
+
+          <h4>What each piece does</h4>
+
+          <div class="fn-block">
+            <div class="fn-title">toSourceRow <span class="tag quiet">private helper</span></div>
+            <p>
+              Turns one orphan notebook entry into a temporary on-screen-shaped template so the
+              recreate steps can reuse the same field meanings the rest of the page understands.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used only inside <em>recreateOrphanTemplates</em>. Uses subclass helpers to turn saved
+              subclass IDs back into names.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">recreateOrphanTemplates <span class="tag">public</span></div>
+            <p>For each orphan, it follows a safe recipe:</p>
+            <ol>
+              <li>create a blank template on the server (gets a new ID),</li>
+              <li>fill in reference / description / parent subclass / sort order,</li>
+              <li>if filling in fails, delete the blank template so we do not leave junk behind,</li>
+              <li>create as many child devices as we can from the remaining valid devices,</li>
+              <li>record success (old ID → new ID) or failure.</li>
+            </ol>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Receives candidates from <em>reconcileTemplates</em>. Results go into
+              <em>applyOrphanRemapToDraft</em>.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">applyOrphanRemapToDraft <span class="tag">public</span></div>
+            <p>
+              Updates the notebook after template recreate attempts:
+            </p>
+            <ul>
+              <li>failed old template IDs (and their group-instance notes) are removed,</li>
+              <li>successful ones are rewritten under the new template ID,</li>
+              <li>
+                group-instance notes are remapped with <em>remapInstanceDraftKeys</em> so custom
+                labels follow the new template ID.
+              </li>
+            </ul>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Depends on <em>remapInstanceDraftKeys</em> from the templates merge file. Called by the
+              manager right after recreate.
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="sync">
+          <h3>Sending changes to the server — syncDraftToApi</h3>
+          <p>
+            After the screen has the merged truth, this file asks: “Which of these merged values are
+            still different from the official binder?” Only those differences are sent.
+          </p>
+          <p>
+            It is intentionally cumulative and forgiving: it does not wait for a row to be perfect or
+            complete. If a person chose a subclass and left a description blank, the subclass change
+            can still be pushed. Failures are collected per row so one bad template does not block
+            every other update.
+          </p>
+
+          <h4>What each piece does</h4>
+
+          <div class="fn-block">
+            <div class="fn-title">materialNeedsSync / templateParentNeedsSync <span class="tag quiet">private helpers</span></div>
+            <p>
+              Simple difference checks. Materials compare subclass, override, and hide/show.
+              Template parents compare reference, description, parent subclass, and sort order. If
+              nothing changed, no server call is made for that part.
+            </p>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">syncDraftToApi <span class="tag">public</span></div>
+            <p>
+              Runs the material updates and template updates. For templates it may also:
+            </p>
+            <ul>
+              <li>delete child devices that exist officially but not in the merged screen row,</li>
+              <li>create child devices that exist on screen but not officially,</li>
+              <li>update child devices whose material link, friendly name, or order changed.</li>
+            </ul>
+            <p>
+              Everything is attempted; failures are remembered rather than throwing away the whole
+              batch.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Uses subclass helpers and shared “build parent template update” logic from the Group
+              Templates section. Called by the manager’s <em>runModeASync</em>.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">revertFailedMaterialsToApi <span class="tag">public</span></div>
+            <p>
+              If a material update failed, put that material’s on-screen fields back to the official
+              version. The notebook is intentionally left alone so a later refresh can try the
+              personal values again.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used immediately after <em>syncDraftToApi</em> inside the manager when failures exist.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">revertFailedTemplatesToApi <span class="tag">public</span></div>
+            <p>
+              Same idea for templates. One special detail: the on-screen “instances” count is a
+              session concept not owned the same way by the materials/templates APIs here, so that
+              count (and whether the row is expanded) is preserved even when other fields revert.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Also used by the manager right after sync failures, together with the materials
+              revert.
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="subclass">
+          <h3>Name ↔ ID helpers — subclassIds</h3>
+          <p>
+            People see subclass names in dropdowns (“Door”, “Camera”). The notebook and many server
+            calls prefer numeric IDs. This small file is the translator used all over the persistence
+            flow.
+          </p>
+
+          <div class="fn-block">
+            <div class="fn-title">resolveSubclassIdByName <span class="tag">public</span></div>
+            <p>
+              Given a visible name, find the matching ID. If the name is blank or unknown, return
+              “no ID.”
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used by the snapshot builder (when saving) and by sync (when comparing/pushing material
+              subclass changes).
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">resolveSubclassNameById <span class="tag">public</span></div>
+            <p>
+              Given an ID, find the visible name for dropdowns and labels. If the ID is missing,
+              return “no name.”
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used by both merge files and by the template orphan recreate helper when rebuilding
+              rows for the screen.
+            </div>
+          </div>
+
+          <div class="fn-block">
+            <div class="fn-title">isSubclassIdValid <span class="tag">public</span></div>
+            <p>
+              Checks whether an ID still exists in the current official subclass list. “No subclass
+              chosen” is allowed. An ID that no longer exists is not. This prevents the merge from
+              re-applying a deleted subclass onto a row.
+            </p>
+            <div class="connect">
+              <strong>Connected to</strong>
+              Used heavily inside both reconcile files (and when deciding whether a hand-added
+              material can be recreated).
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="paper" id="cheatsheet">
+          <h2>Quick memory sheet</h2>
+          <ul>
+            <li>
+              <strong>Manager</strong> decides the order of operations and when auto-save is allowed.
+            </li>
+            <li>
+              <strong>Filing cabinet</strong> is the only door to browser storage.
+            </li>
+            <li>
+              <strong>Snapshot builder</strong> copies important unfinished choices from the screen
+              into notebook shape.
+            </li>
+            <li>
+              <strong>Merge files</strong> combine notebook + official data and discover what must be
+              dropped or recreated.
+            </li>
+            <li>
+              <strong>Recreate files</strong> rebuild missing hand-added materials / templates and
+              fix all the ID links afterward.
+            </li>
+            <li>
+              <strong>Sync file</strong> pushes remaining differences to the official binder and
+              supports graceful fallback when a row fails.
+            </li>
+            <li>
+              <strong>Apply instance draft</strong> puts personalized group labels back onto
+              auto-generated groups.
+            </li>
+            <li>
+              <strong>Subclass helpers</strong> translate between human-readable names and system
+              IDs for everyone else.
+            </li>
+          </ul>
+
+          <div class="analogy">
+            <strong>One sentence to remember</strong>
+            This folder is the page’s memory: it quietly notes unfinished work, restores it against
+            the latest official data when the person returns, repairs broken links when it can, and
+            updates the official records row by row without demanding the whole form be perfect
+            first.
+          </div>
+
+          <p class="footnote">
+            Technical companion (same folder): <code>PERSISTENCE_GUIDE.html</code> — shorter, more
+            code-oriented reference. This file is the plain-language version.
+          </p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Device Instance Utility — Persistence Guide</title>
+    <style>
+      :root {
+        --bg: #f7f4ef;
+        --surface: #fffdf9;
+        --ink: #1f1a14;
+        --muted: #5c5348;
+        --line: #ddd2c3;
+        --accent: #0f5c4c;
+        --accent-soft: #e4f2ee;
+        --warn: #8a4b12;
+        --warn-soft: #f8ecd9;
+        --code-bg: #f0ebe3;
+        --shadow: 0 1px 0 rgba(31, 26, 20, 0.04), 0 10px 30px rgba(31, 26, 20, 0.06);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top right, #efe6d6 0%, transparent 40%),
+          linear-gradient(180deg, #faf7f2 0%, var(--bg) 100%);
+        line-height: 1.55;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: 100vh;
+      }
+
+      nav {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        padding: 1.5rem 1.25rem;
+        border-right: 1px solid var(--line);
+        background: rgba(255, 253, 249, 0.92);
+        backdrop-filter: blur(8px);
+      }
+
+      nav h1 {
+        font-size: 0.95rem;
+        margin: 0 0 0.35rem;
+        letter-spacing: 0.02em;
+      }
+
+      nav p {
+        margin: 0 0 1.25rem;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      nav a {
+        display: block;
+        color: var(--muted);
+        text-decoration: none;
+        padding: 0.35rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.86rem;
+        margin-bottom: 0.15rem;
+      }
+
+      nav a:hover,
+      nav a:focus-visible {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      nav .group {
+        margin-top: 1rem;
+        margin-bottom: 0.4rem;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #8a7f70;
+        padding-left: 0.5rem;
+      }
+
+      main {
+        padding: 2rem 2.5rem 4rem;
+        max-width: 980px;
+      }
+
+      .hero {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 1.5rem 1.75rem;
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+      }
+
+      .hero h2 {
+        margin: 0 0 0.5rem;
+        font-size: 1.7rem;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .flow {
+        display: grid;
+        gap: 0.6rem;
+        margin-top: 1.25rem;
+      }
+
+      .flow-step {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 0.75rem;
+        align-items: start;
+        padding: 0.75rem 0.9rem;
+        border-radius: 10px;
+        background: var(--accent-soft);
+        border: 1px solid #c9e2da;
+      }
+
+      .flow-step .n {
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: var(--accent);
+        color: white;
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+
+      .flow-step strong {
+        display: block;
+        margin-bottom: 0.15rem;
+      }
+
+      .flow-step span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      section.file {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1.35rem 1.5rem 1.5rem;
+        margin-bottom: 1.25rem;
+        box-shadow: var(--shadow);
+      }
+
+      section.file h3 {
+        margin: 0 0 0.35rem;
+        font-size: 1.2rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .badge {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.5rem;
+        border-radius: 999px;
+        background: var(--warn-soft);
+        color: var(--warn);
+        margin-bottom: 0.75rem;
+      }
+
+      .badge.orchestrator {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .badge.helper {
+        background: #eceaf7;
+        color: #433d78;
+      }
+
+      .purpose {
+        color: var(--muted);
+        margin: 0 0 1rem;
+      }
+
+      h4 {
+        margin: 1.1rem 0 0.55rem;
+        font-size: 0.95rem;
+      }
+
+      .fn {
+        border-top: 1px solid var(--line);
+        padding: 0.85rem 0;
+      }
+
+      .fn:first-of-type {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .fn-name {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: var(--accent);
+      }
+
+      .fn-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0.35rem 0 0.4rem;
+      }
+
+      .pill {
+        font-size: 0.72rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        background: var(--code-bg);
+        color: var(--muted);
+      }
+
+      .pill.export {
+        background: #e7f3ea;
+        color: #21633a;
+      }
+
+      .pill.internal {
+        background: #f1ece6;
+        color: #6a5f52;
+      }
+
+      .fn p {
+        margin: 0;
+        color: var(--ink);
+        font-size: 0.94rem;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.86em;
+        background: var(--code-bg);
+        padding: 0.08em 0.35em;
+        border-radius: 4px;
+      }
+
+      .callout {
+        margin-top: 1rem;
+        padding: 0.8rem 0.95rem;
+        border-radius: 10px;
+        background: var(--warn-soft);
+        border: 1px solid #ecd7b4;
+        color: #5d3b14;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        nav {
+          position: relative;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        main {
+          padding: 1.25rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav>
+        <h1>Persistence Guide</h1>
+        <p>DeviceInstanceUtility LocalStorage draft layer</p>
+
+        <div class="group">Overview</div>
+        <a href="#overview">Big picture</a>
+        <a href="#modes">Mode A / Mode B</a>
+
+        <div class="group">Orchestrator</div>
+        <a href="#useDeviceInstanceDraftPersistence">useDeviceInstanceDraftPersistence.ts</a>
+
+        <div class="group">Storage &amp; snapshot</div>
+        <a href="#draftStorage">draftStorage.ts</a>
+        <a href="#buildDraftFromState">buildDraftFromState.ts</a>
+        <a href="#applyInstanceDraft">applyInstanceDraft.ts</a>
+
+        <div class="group">Reconcile (merge LS + API)</div>
+        <a href="#reconcileMaterials">reconcileMaterials.ts</a>
+        <a href="#reconcileTemplates">reconcileTemplates.ts</a>
+
+        <div class="group">Orphan recreate</div>
+        <a href="#recreateOrphanCustomMaterials">recreateOrphanCustomMaterials.ts</a>
+        <a href="#recreateOrphanTemplates">recreateOrphanTemplates.ts</a>
+
+        <div class="group">Sync &amp; helpers</div>
+        <a href="#syncDraftToApi">syncDraftToApi.ts</a>
+        <a href="#subclassIds">subclassIds.ts</a>
+      </nav>
+
+      <main>
+        <div class="hero" id="overview">
+          <h2>What this folder does</h2>
+          <p>
+            The <code>persistence/</code> folder saves Device Instance Utility work in
+            <strong>LocalStorage</strong> (scoped by user + project), then restores it when the page
+            reloads. On restore it merges the draft with the latest API data, recreates deleted
+            non-PPM materials / templates when possible, and pushes cumulative edits back to the API.
+          </p>
+
+          <div class="flow" id="modes">
+            <div class="flow-step">
+              <div class="n">A</div>
+              <div>
+                <strong>Mode A — hydrate on load / refresh</strong>
+                <span
+                  >Read LS → reconcile materials → recreate orphan non-PPM → reconcile templates →
+                  recreate orphan templates → hydrate UI → sync merged values to API.</span
+                >
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="n">B</div>
+              <div>
+                <strong>Mode B — write-through while editing</strong>
+                <span
+                  >After a successful hydrate, debounce (~300ms) and rewrite the draft whenever
+                  materials / templates / instances change.</span
+                >
+              </div>
+            </div>
+            <div class="flow-step">
+              <div class="n">C</div>
+              <div>
+                <strong>Clear after Create All success</strong>
+                <span>Wipe the LS draft so the next editing session starts clean.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <section class="file" id="useDeviceInstanceDraftPersistence">
+          <div class="badge orchestrator">Orchestrator hook</div>
+          <h3>useDeviceInstanceDraftPersistence.ts</h3>
+          <p class="purpose">
+            React hook that owns the full draft lifecycle. Presentational components never talk to
+            LocalStorage directly — this hook coordinates storage, reconcile, orphan recreate, and
+            Mode A sync.
+          </p>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">useDeviceInstanceDraftPersistence(...)</div>
+            <div class="fn-meta"><span class="pill export">exported</span><span class="pill">hook</span></div>
+            <p>
+              Main entry. Takes current API rows, session state, and callbacks
+              (<code>hydrateFromDraft</code>, <code>replaceMaterialsAndTemplates</code>). Returns
+              <code>reconcileAfterMaterialsRefresh</code> and
+              <code>clearDraftAfterCreateAllSuccess</code>.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">showSyncFailureToasts(...)</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>
+              Shows sticky error toasts for materials / templates that failed Mode A API sync, asking
+              the user to refresh and retry.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">runModeASync(...)</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>
+              Calls <code>syncDraftToApi</code>. On failure: keeps the LS draft intact, pauses
+              write-through, reverts failed UI rows to API values, and shows toasts. On success:
+              returns the usage-adjusted materials/templates.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">hydrateSessionFromDraft()</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>
+              Full Mode A pipeline on page load (runs once when API data is ready). Reads draft →
+              reconcile materials → recreate orphan customs → reconcile templates → recreate orphan
+              templates → prune invalid GI keys → hydrate UI → write cleaned draft → Mode A sync.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">reconcileAfterMaterialsRefresh(freshApiMaterials)</div>
+            <div class="fn-meta"><span class="pill export">returned</span></div>
+            <p>
+              Same idea as Mode A, but triggered after “Refresh Materials”. Builds a draft from the
+              current session, reconciles against the fresh API materials list, remaps/prunes
+              template device FKs, then syncs again.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">clearDraftAfterCreateAllSuccess()</div>
+            <div class="fn-meta"><span class="pill export">returned</span></div>
+            <p>Clears the LocalStorage key after Create All succeeds and re-enables write-through.</p>
+          </div>
+
+          <div class="callout">
+            Guard refs matter: <code>hasHydratedRef</code> (once),
+            <code>isHydrationRunningRef</code> (no overlap),
+            <code>allowWriteThroughRef</code> (Mode B only after successful Mode A).
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="draftStorage">
+          <div class="badge">LocalStorage I/O</div>
+          <h3>draftStorage.ts</h3>
+          <p class="purpose">
+            Thin, safe wrapper around <code>window.localStorage</code>. Builds the key, reads/writes
+            JSON, validates shape, and never throws to callers.
+          </p>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">getDeviceInstanceDraftStorageKey(projectId)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              Returns <code>deviceInstanceUtility_{userId}_{projectId}</code>, or <code>''</code> if
+              user/project is missing (callers must no-op).
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">isRecord / parseMaterialEntry / parseTemplateEntry / parseInstanceEntry / parseDraft</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>
+              Defensive parsers. Drop invalid entries; tolerate older drafts missing newer fields
+              (e.g. <code>isCustom</code> snapshot fields default safely). Wrong version →
+              <code>null</code>.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">readDeviceInstanceDraft(projectId)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>Reads + parses the draft for this user/project. Returns <code>null</code> if missing/invalid.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">writeDeviceInstanceDraft(projectId, draft)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              Writes draft JSON with current version + fresh <code>updatedAt</code>. Returns
+              <code>true</code>/<code>false</code> (quota / private mode failures become
+              <code>false</code>).
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">clearDeviceInstanceDraft(projectId)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>Removes the LS key. Swallows storage errors.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">hasDeviceInstanceDraftContent(draft)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>True if any of projectMaterials / groupTemplates / groupInstances has keys.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">createEmptyDeviceInstanceDraft</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>Alias of <code>EMPTY_DRAFT</code> — fresh mutable empty draft object.</p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="buildDraftFromState">
+          <div class="badge">Snapshot builder</div>
+          <h3>buildDraftFromState.ts</h3>
+          <p class="purpose">
+            Converts live React session state into the minimal draft shape stored in LocalStorage.
+            Derived display fields (Used, Remaining, names already resolved elsewhere) are omitted.
+          </p>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">buildDraftFromState({ materials, templates, instances, subclassItems })</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              Builds <code>DeviceInstanceUtilityDraft</code>:
+            </p>
+            <ul>
+              <li>
+                <strong>Materials</strong> — stores subclassId (name→id), override, hide, and
+                non-PPM snapshot fields needed for orphan recreate.
+              </li>
+              <li>
+                <strong>Templates</strong> — parent fields + devices (including friendly names /
+                sortOrder).
+              </li>
+              <li>
+                <strong>Instances</strong> — only stores rows where Group ID / Group Name was
+                customized; drops keys whose template/index is out of range.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="applyInstanceDraft">
+          <div class="badge">GI overlay</div>
+          <h3>applyInstanceDraft.ts</h3>
+          <p class="purpose">
+            Applies saved Group Instance customizations (renumber / manual Group ID / Group Name)
+            onto auto-derived instance rows after templates produce them.
+          </p>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">applyInstanceDraft(instances, groupInstancesDraft)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              For each instance key <code>{templateId}:{instanceIndex}</code>, overlays custom
+              <code>groupId</code> / <code>groupName</code> when the draft flags say so. Leaves
+              auto-generated values alone when no draft entry exists.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="reconcileMaterials">
+          <div class="badge">Merge LS + API</div>
+          <h3>reconcileMaterials.ts</h3>
+          <p class="purpose">
+            Merges latest API Project Materials with draft overlays. LocalStorage wins for subclass /
+            override / hide. Missing PPM devices are pruned; missing non-PPM devices become orphan
+            recreate candidates.
+          </p>
+
+          <h4>Types</h4>
+          <div class="fn">
+            <div class="fn-name">OrphanCustomMaterialCandidate / ReconcileMaterialsResult</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>Result shapes returned by <code>reconcileMaterials</code>.</p>
+          </div>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">canRecreateCustomMaterial(entry, subclassItems)</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>
+              True only for custom rows with description/make/model, valid subclass, and
+              <code>ppmQty &gt; 0</code>.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">reconcileMaterials({ apiMaterials, draftMaterials, subclassItems })</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>Returns:</p>
+            <ul>
+              <li><code>materials</code> — API rows with LS overlays applied</li>
+              <li><code>removedDeviceIds</code> — PPM (or unrecreatable) ids to prune from GT</li>
+              <li><code>orphanCustomCandidates</code> — non-PPM rows to recreate</li>
+              <li><code>nextDraftMaterials</code> — cleaned draft map (orphans still pending recreate)</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="reconcileTemplates">
+          <div class="badge">Merge LS + API</div>
+          <h3>reconcileTemplates.ts</h3>
+          <p class="purpose">
+            Same reconcile idea for Group Templates. LS wins for reference / description / parent
+            subclass / instances / friendly names. Devices pointing at missing materials are dropped.
+            Templates that exist only in LS become orphan recreate candidates (if they still have
+            valid devices).
+          </p>
+
+          <h4>Types</h4>
+          <div class="fn">
+            <div class="fn-name">OrphanTemplateCandidate / ReconcileTemplatesResult</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>Result shapes for template reconcile + orphan handoff.</p>
+          </div>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">filterDevicesAgainstMaterials(devices, materialIds)</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>Keeps only devices whose <code>materialId</code> still exists; reindexes sortOrder.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">toUiDevices(devices)</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>Maps draft device entries into UI <code>GroupTemplateDevice</code> objects.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">reconcileTemplates({ apiTemplates, draftTemplates, materials, subclassItems })</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              Overlays LS onto API templates; collects orphan candidates for templates whose API id
+              is gone but still have remaining devices.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">remapInstanceDraftKeys(groupInstances, previousTemplateId, nextTemplateId)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              When an orphan template is recreated with a new id, rewrites GI draft keys from
+              <code>oldId:n</code> → <code>newId:n</code>.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="recreateOrphanCustomMaterials">
+          <div class="badge">Orphan recreate</div>
+          <h3>recreateOrphanCustomMaterials.ts</h3>
+          <p class="purpose">
+            Recreates non-PPM materials that were in LocalStorage but deleted on the API, then remaps
+            old device ids → new ids in the draft and in Group Template device FKs.
+          </p>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">recreateOrphanCustomMaterials({ projectId, orphans, subclassItems, createCustomMaterial })</div>
+            <div class="fn-meta"><span class="pill export">exported</span><span class="pill">async</span></div>
+            <p>
+              Calls CreateCustomBudgetResource for each orphan. Returns
+              <code>recreatedMaterials</code>, <code>idRemap</code> (old→new), and
+              <code>failurePreviousIds</code>.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">applyCustomMaterialRemapToDraft(draft, idRemap, recreatedMaterials, failurePreviousIds)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              Deletes failed previous ids from the draft; moves successful entries under the new
+              device id; remaps <code>materialId</code> inside every GT device line.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">remapTemplateMaterialIds(templates, idRemap)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              Same materialId remap, but for in-memory UI template rows (used on Refresh Materials
+              before template reconcile).
+            </p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="recreateOrphanTemplates">
+          <div class="badge">Orphan recreate</div>
+          <h3>recreateOrphanTemplates.ts</h3>
+          <p class="purpose">
+            Recreates Group Templates that exist in LS but were deleted on the server. Only devices
+            that still exist in Project Materials are reattached. Remaps draft template ids and GI
+            keys to the new server ids.
+          </p>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">toSourceRow(orphan, subclassItems)</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>Builds a temporary UI template row from the orphan draft for recreate steps.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">recreateOrphanTemplates({ projectId, orphans, subclassItems, createBlank, updateTemplate, createDevice, deleteTemplate })</div>
+            <div class="fn-meta"><span class="pill export">exported</span><span class="pill">async</span></div>
+            <p>
+              For each orphan: create blank template → update parent fields → create remaining
+              devices. If parent update fails, deletes the blank and records failure. Returns
+              recreated templates + id remap + failures.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">applyOrphanRemapToDraft(draft, idRemap, recreatedTemplates, failurePreviousIds)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              Removes failed template ids (and their GI keys); moves successful drafts under the new
+              template id; remaps GI keys via <code>remapInstanceDraftKeys</code>.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="syncDraftToApi">
+          <div class="badge">Mode A push</div>
+          <h3>syncDraftToApi.ts</h3>
+          <p class="purpose">
+            After UI has the merged LS+API values, push per-row cumulative updates to the backend.
+            One material → one PATCH. One template → parent update + device create/update/delete.
+            Does not wait for empty/required fields — syncs whatever is currently available.
+          </p>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">materialNeedsSync / templateParentNeedsSync</div>
+            <div class="fn-meta"><span class="pill internal">internal</span></div>
+            <p>Diff helpers: only emit API calls when UI differs from the API baseline.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">syncDraftToApi({ ...deps })</div>
+            <div class="fn-meta"><span class="pill export">exported</span><span class="pill">async</span></div>
+            <p>
+              Runs material PATCHes and template parent/device mutations in parallel
+              (<code>Promise.allSettled</code>). Collects failures without aborting the whole batch.
+              Returns failure lists + failed id sets.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">revertFailedMaterialsToApi(materials, apiMaterials, failedMaterialIds)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              For materials that failed sync, restore UI fields from the API snapshot. LS draft is
+              left intact for retry.
+            </p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">revertFailedTemplatesToApi(templates, apiTemplates, failedTemplateIds)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              Same for templates, but preserves session <code>instances</code> and
+              <code>isExpanded</code> (not API fields).
+            </p>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <section class="file" id="subclassIds">
+          <div class="badge helper">Shared helper</div>
+          <h3>subclassIds.ts</h3>
+          <p class="purpose">
+            Small helpers used across reconcile / draft build / sync for converting between subclass
+            <em>names</em> (UI Select values) and subclass <em>ids</em> (API / LS draft values).
+          </p>
+
+          <h4>Functions</h4>
+
+          <div class="fn">
+            <div class="fn-name">resolveSubclassIdByName(subclassName, subclassItems)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>Name → <code>subClassId</code>, or <code>null</code> if blank/unmatched.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">resolveSubclassNameById(subclassId, subclassItems)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>Id → display name (via <code>resolveSubclassName</code>), or <code>null</code>.</p>
+          </div>
+
+          <div class="fn">
+            <div class="fn-name">isSubclassIdValid(subclassId, subclassItems)</div>
+            <div class="fn-meta"><span class="pill export">exported</span></div>
+            <p>
+              <code>null</code> is treated as valid (unassigned). Otherwise true only if the id
+              exists in the current subclass list.
+            </p>
+          </div>
+        </section>
+
+        <div class="hero">
+          <h2>How to read this in order</h2>
+          <p>
+            Start with <strong>useDeviceInstanceDraftPersistence</strong> (orchestrator), then
+            <strong>draftStorage</strong> + <strong>buildDraftFromState</strong> (what gets saved),
+            then <strong>reconcile*</strong> → <strong>recreateOrphan*</strong> →
+            <strong>syncDraftToApi</strong> (load path). Open this file in a browser for the
+            clickable sidebar.
+          </p>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
