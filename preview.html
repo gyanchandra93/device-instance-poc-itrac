@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Instance Utility - Test Checklist</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI,Roboto,sans-serif;
+}
+
+body{
+    background:#f4f7fb;
+    padding:30px;
+    color:#2d3748;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+header{
+    background:white;
+    padding:25px;
+    border-radius:14px;
+    box-shadow:0 6px 20px rgba(0,0,0,.08);
+    margin-bottom:25px;
+}
+
+h1{
+    font-size:28px;
+}
+
+.summary{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
+    flex-wrap:wrap;
+    gap:15px;
+}
+
+.progress{
+    width:100%;
+    height:12px;
+    background:#e2e8f0;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:12px;
+}
+
+.progress-bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#2563eb,#06b6d4);
+    transition:.3s;
+}
+
+.stats{
+    font-weight:600;
+    color:#2563eb;
+}
+
+button{
+    padding:10px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    background:#ef4444;
+    color:white;
+    font-weight:600;
+}
+
+.section{
+    background:white;
+    border-radius:14px;
+    margin-bottom:20px;
+    overflow:hidden;
+    box-shadow:0 5px 16px rgba(0,0,0,.08);
+}
+
+.section-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 22px;
+    background:#2563eb;
+    color:white;
+}
+
+.section-header h2{
+    font-size:20px;
+}
+
+.section-body{
+    padding:20px;
+}
+
+ul{
+    list-style:none;
+}
+
+li{
+    padding:10px 0;
+    border-bottom:1px solid #edf2f7;
+}
+
+label{
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    cursor:pointer;
+}
+
+input[type=checkbox]{
+    width:18px;
+    height:18px;
+    margin-top:3px;
+}
+
+.checkall{
+    background:white;
+    color:#2563eb;
+    padding:8px 14px;
+    font-size:13px;
+}
+
+.completed{
+    text-decoration:line-through;
+    color:#718096;
+}
+
+@media(max-width:700px){
+.summary{
+    flex-direction:column;
+    align-items:flex-start;
+}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+
+<h1>✅ Device Instance Utility Test Checklist</h1>
+
+<div class="summary">
+
+<div class="stats">
+Completed:
+<span id="completed">0</span> /
+<span id="total">0</span>
+</div>
+
+<button onclick="resetChecklist()">
+Reset Checklist
+</button>
+
+</div>
+
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+
+</header>
+
+<div id="sections"></div>
+
+</div>
+
+<script>
+
+const data=[
+
+{
+title:"Initial Landing",
+items:[
+"Check for non-PPM project (Button Disabled)",
+"Check for PPM project (Button Disabled)"
+]
+},
+
+{
+title:"Project Materials Features",
+items:[
+"Search",
+"Show / Hide Checkbox",
+"Action column show/hide and side effect in Group Templates",
+"Delete enable + disable and tooltip",
+"Override",
+"Alert warning for exceeding limits",
+"Add non-PPM Device",
+"Count value in header",
+"Subclass dropdown (Search & Select)"
+]
+},
+
+{
+title:"Group Templates",
+items:[
+"Add single empty template",
+"Add multiple empty templates",
+"Create new template",
+"Delete template",
+"Update template",
+"Copy template",
+"Add device",
+"Update friendly name",
+"Delete devices",
+"Add duplicate devices"
+]
+},
+
+{
+title:"Group Instances",
+items:[
+"Search",
+"Rename"
+]
+},
+
+{
+title:"Live Preview",
+items:[
+"Search"
+]
+},
+
+{
+title:"Create All",
+items:[
+"Normal behavior (Showing incomplete device count)",
+"Showing duplicate device error",
+"Not showing incoming incomplete device list"
+]
+},
+
+{
+title:"Persistence Edge Cases",
+items:[
+"Delete non-PPM device in DB and refresh",
+"Delete template from DB",
+"Change non-PPM device name from API and verify Local Storage persistence"
+]
+}
+
+];
+
+const container=document.getElementById("sections");
+
+data.forEach((section,sectionIndex)=>{
+
+const card=document.createElement("div");
+card.className="section";
+
+let html=`
+<div class="section-header">
+<h2>${section.title}</h2>
+<button class="checkall" onclick="checkSection(${sectionIndex})">
+Check All
+</button>
+</div>
+
+<div class="section-body">
+<ul>
+`;
+
+section.items.forEach((item,index)=>{
+
+const id=`${sectionIndex}-${index}`;
+
+html+=`
+<li>
+<label>
+<input type="checkbox"
+id="${id}"
+onchange="saveState();updateProgress()">
+
+<span>${item}</span>
+
+</label>
+</li>
+`;
+
+});
+
+html+=`
+</ul>
+</div>
+`;
+
+card.innerHTML=html;
+
+container.appendChild(card);
+
+});
+
+function saveState(){
+
+const boxes=document.querySelectorAll("input[type=checkbox]");
+
+const values=[];
+
+boxes.forEach(box=>{
+
+values.push(box.checked);
+
+const text=box.parentElement.querySelector("span");
+
+if(box.checked)
+text.classList.add("completed");
+else
+text.classList.remove("completed");
+
+});
+
+localStorage.setItem("deviceTestChecklist",JSON.stringify(values));
+
+}
+
+function loadState(){
+
+const values=JSON.parse(localStorage.getItem("deviceTestChecklist")||"[]");
+
+const boxes=document.querySelectorAll("input[type=checkbox]");
+
+boxes.forEach((box,index)=>{
+
+box.checked=values[index]||false;
+
+const text=box.parentElement.querySelector("span");
+
+if(box.checked)
+text.classList.add("completed");
+
+});
+
+}
+
+function updateProgress(){
+
+const boxes=document.querySelectorAll("input[type=checkbox]");
+
+const total=boxes.length;
+
+const completed=[...boxes].filter(x=>x.checked).length;
+
+document.getElementById("total").innerText=total;
+
+document.getElementById("completed").innerText=completed;
+
+document.getElementById("progressBar").style.width=(completed/total*100)+"%";
+
+saveState();
+
+}
+
+function resetChecklist(){
+
+if(confirm("Reset all completed test cases?")){
+
+localStorage.removeItem("deviceTestChecklist");
+
+document.querySelectorAll("input[type=checkbox]").forEach(c=>{
+
+c.checked=false;
+
+});
+
+updateProgress();
+
+}
+
+}
+
+function checkSection(section){
+
+const start=data.slice(0,section).reduce((a,b)=>a+b.items.length,0);
+
+const end=start+data[section].items.length;
+
+const boxes=document.querySelectorAll("input[type=checkbox]");
+
+let allChecked=true;
+
+for(let i=start;i<end;i++){
+
+if(!boxes[i].checked){
+
+allChecked=false;
+
+break;
+
+}
+
+}
+
+for(let i=start;i<end;i++){
+
+boxes[i].checked=!allChecked;
+
+}
+
+updateProgress();
+
+}
+
+loadState();
+
+updateProgress();
+
+</script>
+
+</body>
+</html>
